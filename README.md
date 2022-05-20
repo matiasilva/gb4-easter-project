@@ -1,6 +1,6 @@
 # GB4 Easter Term Project
 
-Multi-modal Communications for Internet of Everything
+Code written for CUED Part IIA Easter Term project: GB4 Multi-modal Communications for Internet of Everything
 
 ## Aims
 
