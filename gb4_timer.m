@@ -3,11 +3,11 @@ main();
 function main()
     % init
     % note - 0.3s delay for spray switch on
-    pT = timer("StartDelay", 0.3);
+    a = arduino();
+    pT = timer("StartDelay", 0.05);
     pT.TimerFcn = @(~,~)disp('pulse done');
-    dT = timer("StartDelay", 1);
+    dT = timer("StartDelay", 0.4);
     dT.TimerFcn = @(~,~)disp('waiting done');
-    a = 2;
     setRelay(a, 0);
     
     % main loop
@@ -26,5 +26,6 @@ function doPulse(t, a)
 end
 
 function setRelay(a, s)
-    fprintf('current state is %u\n', s);
+    writeDigitalPin(a, 'D9', s);
+    %fprintf('current state is %u\n', s);
 end
