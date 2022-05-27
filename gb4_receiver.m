@@ -49,6 +49,7 @@ function detect(a, u_noise, std_noise)
     pulse = [u_noise];
     dvs = [];
     n_thresh = u_noise + 2*std_noise;
+    disp('detecting peak')
     while isDetecting
         tic
         s = readVoltage(a, 'A0');
@@ -70,7 +71,8 @@ function detect(a, u_noise, std_noise)
             isTrackingFall = false;
         end
 
-        if isFalling && ~isAboveNoise
+        if isFalling && ~isAboveNoise && ~isTrackingFall
+            disp('peak finished')
             isDetecting = false;
         end
     end
