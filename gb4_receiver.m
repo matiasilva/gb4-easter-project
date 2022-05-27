@@ -10,7 +10,7 @@ end
 function t = createNoiseTimer()
     t = timer;
     t.TimerFcn = @tfcn;
-    t.StartDelay = 3;
+    t.StartDelay = 5;
     t.UserData = true;
 
     function tfcn(mTimer,~)
@@ -26,12 +26,12 @@ function calibration(a)
     start(waitT);
     nlevels = [];
     while waitT.UserData
-          s = readVoltage(a, 'A0');
+         s = readVoltage(a, 'A0');
          nlevels = [nlevels; s];
     end
     std_noise = std(nlevels);
     u_noise = mean(nlevels);
-    fprintf('average noise: %.2fV, std of noise: %.2fV\n', u_noise, std_noise);
+    fprintf('average noise: %.2fV, std of noise: %.3fV\n', u_noise, std_noise);
 
     disp('send three ones')
     detect(a, u_noise, std_noise);
@@ -48,8 +48,7 @@ function detect(a, u_noise, std_noise)
     isTrackingFall = true;
     pulse = [u_noise];
     dvs = [];
-    n1 = u_noise - 0.5*std_noise;
-    n2 = u_noise + 0.5*std_noise;
+    n_thresh = u_noise + 2*std_noise;
     while isDetecting
         tic
         s = readVoltage(a, 'A0');
@@ -65,7 +64,7 @@ function detect(a, u_noise, std_noise)
         % ignore rises after first fall
         isFalling = roll_avg_dvs(end) < 0;
         % ignore any signal below 0.5std of noise
-        isAboveNoise = roll_avg_pulse(end) > n1;
+        isAboveNoise = roll_avg_pulse(end) > n_thresh;
         if isFalling && isAboveNoise && isTrackingFall
             disp('locked onto fall');
             isTrackingFall = false;
