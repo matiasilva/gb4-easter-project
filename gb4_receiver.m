@@ -31,10 +31,10 @@ function calibration(a)
     end
     std_noise = std(nlevels);
     u_noise = mean(nlevels);
-    fprintf('average noise: %.2fV, std of noise: %.2fV', u_noise, std_noise);
+    fprintf('average noise: %.2fV, std of noise: %.2fV\n', u_noise, std_noise);
 
     disp('send three ones')
-    detect(u_noise - 0.5*std_noise, u_noise +0.5*std_noise);
+    detect(a, u_noise, std_noise);
 
     disp('send three zeros')
 end
@@ -42,12 +42,14 @@ end
 function [u_peak, std_peak, u_width, std_width] = postProcess(pulse, dvsthresh)
 end
 
-function detect(n1, n2)
+function detect(a, u_noise, std_noise)
     isDetecting = true;
     isFalling = false;
     isTrackingFall = true;
-    pulse = [];
+    pulse = [u_noise];
     dvs = [];
+    n1 = u_noise - 0.5*std_noise;
+    n2 = u_noise + 0.5*std_noise;
     while isDetecting
         tic
         s = readVoltage(a, 'A0');
@@ -61,17 +63,16 @@ function detect(n1, n2)
         roll_avg_pulse = movmean(pulse, 3);
         
         % ignore rises after first fall
-        isFalling = roll_avg_dvs(end) > 0 && isTrackingFall;
-        if isFalling
-            if isTrackingFall
-                disp('locked onto fall');
-                isTrackingFall = false;
-            else
-                % exit if values return back to noise level ± 0.5std
-                if (roll_avg_pulse(end) > n1) && (roll_avg_pulse(end) < n2)
-                    isDetecting = false;
-                end
-            end
+        isFalling = roll_avg_dvs(end) < 0;
+        % ignore any signal below 0.5std of noise
+        isAboveNoise = roll_avg_pulse(end) > n1;
+        if isFalling && isAboveNoise && isTrackingFall
+            disp('locked onto fall');
+            isTrackingFall = false;
+        end
+
+        if isFalling && ~isAboveNoise
+            isDetecting = false;
         end
     end
     plot(1:size(pulse), pulse);
