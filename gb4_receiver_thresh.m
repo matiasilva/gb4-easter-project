@@ -102,8 +102,8 @@ function main()
             if s_avg(end) < low_thresh
                 %< low_thresh && (toc - holdTrackT) > holdTime
                 vthresh_mode = 0;
+                fprintf("vthresh decision: got %i -- count %i\n", vthresh_bits(end), bits_rx);
             end
-            fprintf("vthresh decision: got %i -- count %i", vthresh_bits(end), bits_rx);
         end
 
         % derivative thresholding
@@ -128,7 +128,7 @@ function main()
                 dthresh_bits = [dthresh_bits, 0];
             end
             dthresh_mode = 0;
-            fprintf("dthresh decision: got %i -- count %i", dthresh_bits(end), bits_rx);
+            fprintf("dthresh decision: got %i -- count %i\n", dthresh_bits(end), bits_rx);
         end
 
 
