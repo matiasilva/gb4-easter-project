@@ -6,9 +6,9 @@ function main()
     pT = timer("StartDelay", 0.05);
     pT.TimerFcn = @(~,~)fprintf('');
     shortT = timer("StartDelay", 0.1);
-    shortT.TimerFcn = @(~,~)disp('sent a 0');
+    shortT.TimerFcn = @(~,~)disp('sent a 0, waiting..');
     longT = timer("StartDelay", 0.4);
-    longT.TimerFcn = @(~,~)disp('sent a 1');
+    longT.TimerFcn = @(~,~)disp('sent a 1, waiting..');
     iT = timer("StartDelay", 10);
     iT.TimerFcn = @(~,~)fprintf('');
 
@@ -16,22 +16,22 @@ function main()
 
     % main loop
     while true
-        bit = input('enter desired binary output');
-        modulation(bit);
+        bit = input('enter desired binary output\n');
+        modulation(bit, a, pT, shortT, longT, iT);
     end
 end
 
-function modulation(bit)
-    if bit == '0'
-        doSpray(pT, shortT, iT);
-    elseif bit == '1'
-        doSpray(pT, longT, iT);
+function modulation(bit, a, pT, shortT, longT, iT)
+    if bit == 0
+        doSpray(a, pT, shortT, iT);
+    elseif bit == 1
+        doSpray(a, pT, longT, iT);
     else
         fprintf('invalid input\n');
     end
 end
 
-function doSpray(pulseT, sprayT, intervalT)
+function doSpray(a, pulseT, sprayT, intervalT)
     doPulse(pulseT, a);
     start(sprayT);
     wait(sprayT);
