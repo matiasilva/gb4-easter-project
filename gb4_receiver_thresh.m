@@ -39,7 +39,8 @@ function main()
     dthresh_end = 0;
 
     % 20 Hz is the best we can do given the Arduino-MATLAB bottleneck
-    r = rateControl(1/samplingRate);
+    %r = rateControl(1/samplingRate);
+    r = robotics.Rate(1/samplingRate);
 
     holdTrackT = 0;
 
