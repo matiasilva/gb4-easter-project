@@ -60,7 +60,7 @@ function main()
 
         % calculate a moving mean for noise reduction
         s_avg = movmean(s, 7);
-        dsdt = gradient(s_avg, sampling_rate);
+        dsdt = gradient(s_avg, samplingRate);
 
         plot(t, s, 'Color', 'k');
         hold on;
@@ -72,7 +72,7 @@ function main()
         yline(high_thresh);
         yline(low_thresh);  
         axis([0 inf 0 4]);
-        text(0, 3.8, sprintf('mode %i - %s', vthresh_mode, desc(vthresh_mode)), 'Color', cols(vthresh_mode));
+        title(gca, sprintf('mode %i - %s', vthresh_mode, desc(vthresh_mode + 1)), 'Color', cols(vthresh_mode + 1));
 
         % value thresholding
         if vthresh_mode == 0
