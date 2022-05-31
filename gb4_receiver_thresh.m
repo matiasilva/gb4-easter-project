@@ -46,7 +46,7 @@ function main()
 
     % internal for drawing
     triggerValue = 0;
-    desc = ['listening for new data', 'tracking a peak', 'waiting for recovery, ignoring data'];
+    desc = ["listening for new data", "tracking a peak", "waiting for recovery, ignoring data"];
     cols = ['g', 'b', 'r'];
 
     % only stop after n + 1 bits received
