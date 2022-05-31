@@ -1,21 +1,27 @@
 main();
 
 function main()
+    % params
+    epw = 0.05;
+    spw = 0.1;
+    lpw = 0.4;
+    interval = 10;
+    n = 10; % bit count
+    
     % init
     a = arduino();
-    pT = timer("StartDelay", 0.05);
+    pT = timer("StartDelay", epw);
     pT.TimerFcn = @(~,~)fprintf('');
-    shortT = timer("StartDelay", 0.1);
-    shortT.TimerFcn = @(~,~)disp('sent a 0');
-    longT = timer("StartDelay", 0.4);
-    longT.TimerFcn = @(~,~)disp('sent a 1');
-    iT = timer("StartDelay", 10);
+    shortT = timer("StartDelay", spw);
+    shortT.TimerFcn = @(~,~)disp('sent a 0, waiting..');
+    longT = timer("StartDelay", lpw);
+    longT.TimerFcn = @(~,~)disp('sent a 1, waiting..');
+    iT = timer("StartDelay", interval);
     iT.TimerFcn = @(~,~)fprintf('');
 
     setRelay(a, 0);
 
     % main loop
-    n = 10; % bit count
     bitsToSend = randi(2,n,1) - 1;
     for i = 1:n
         %bit = input('enter desired binary output');
@@ -34,7 +40,7 @@ function modulation(bit, pT, longT, shortT, iT, a)
     end
 end
 
-function doSpray(pulseT, sprayT, intervalT)
+function doSpray(pulseT, sprayT, intervalT, a)
     doPulse(pulseT, a);
     start(sprayT);
     wait(sprayT);
