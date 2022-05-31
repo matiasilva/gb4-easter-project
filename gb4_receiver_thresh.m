@@ -18,7 +18,7 @@ function main()
     high_thresh = 1.5;
     low_thresh = 0.8;
     lag = 1;
-    tolerance = 0.9;
+    holdTime = 2;
 
     % init arrays
     s = [];
@@ -35,9 +35,12 @@ function main()
     % mode 2 - peak detected, waiting for fall
     mode = 0;
     startedTrackingT = 0;
+    holdTrackT = 0;
 
     % internal for drawing
     triggerValue = 0;
+    desc = ['listening for new data', 'tracking a peak', 'waiting for recovery, ignoring data'];
+    cols = ['g', 'b', 'r'];
 
     % only stop after 20 bits received
     tic
@@ -50,7 +53,7 @@ function main()
         t = [t, toc];
 
         % calculate a moving mean for noise reduction
-        s_avg = movmean(s, 5);
+        s_avg = movmean(s, 7);
 
         %plot(t, s, 'Color', 'k');
         %hold on;
@@ -59,6 +62,7 @@ function main()
         yline(high_thresh);
         yline(low_thresh);  
         axis([0 inf 0 2.5]);
+        text(0, 3.8, sprintf('mode %i - %s', mode, desc(mode)), 'Color', cols(mode));
 
         if mode == 0
             if s_avg(end) > low_thresh
@@ -73,16 +77,18 @@ function main()
             xline(triggerValue + lag, 'Color', 'r');
             if toc - startedTrackingT > lag
                 if s_avg(end) > high_thresh
-                    fprintf('continual rise detected, likely high\n')
+                    %fprintf('continual rise detected, likely high\n')
                     bits = [bits, 1];
                 else
                     %fprintf('continual rise not detected, likely low\n')
                     bits = [bits, 0];
                 end
                 mode = 2;
+                holdTrackT = toc;
+                fprintf('holding: ignoring all rises')
             end
         elseif mode == 2
-            if s_avg(end) < low_thresh
+            if s_avg(end) < low_thresh && (toc - holdTrackT) > holdTime
                 mode = 0;
             end
         end
@@ -92,16 +98,4 @@ function main()
         waitfor(r);
     end
     disp(bits)
-end 
-
-function t = createLagTimer(delta)
-    t = timer;
-    t.TimerFcn = @tfcn;
-    t.StartDelay = delta;
-    t.UserData = true;
-
-    function tfcn(mTimer,~)
-        %disp('finished measuring noise')
-        t.UserData = false;
-    end
 end
