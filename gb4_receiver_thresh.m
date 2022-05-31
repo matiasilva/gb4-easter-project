@@ -37,12 +37,17 @@ function main()
     dthresh_mode = 0;
     dthresh_start = 0;
     dthresh_end = 0;
+    dthresh_hold = 5;
+    dthresh_holdT = 0;
+
+    % bit decision params
+    bitSyncWait = 6;
+    bitSyncWaitT = 0;
+    needsBitSync = false;
 
     % 20 Hz is the best we can do given the Arduino-MATLAB bottleneck
     %r = rateControl(1/samplingRate);
     r = robotics.Rate(1/samplingRate);
-
-    holdTrackT = 0;
 
     % internal for drawing
     triggerValue = 0;
@@ -50,7 +55,6 @@ function main()
     cols = ['g', 'b', 'r'];
 
     % only stop after n + 1 bits received
-    bits_rx = 0;
     tic
     while bits_rx <= (n + 1)
         % grab new data
@@ -95,14 +99,13 @@ function main()
                     vthresh_bits = [vthresh_bits, 0];
                 end
                 vthresh_mode = 2;
-                %holdTrackT = toc;
                 %fprintf('holding: ignoring all rises')
             end
         elseif vthresh_mode == 2
             if s_avg(end) < low_thresh
                 %< low_thresh && (toc - holdTrackT) > holdTime
                 vthresh_mode = 0;
-                fprintf("vthresh decision: got %i -- count %i\n", vthresh_bits(end), bits_rx);
+                fprintf("vthresh decision: got %i", vthresh_bits(end));
             end
         end
 
@@ -110,6 +113,10 @@ function main()
         yline(dsdt_thresh, 'Color', 'r');
         if dthresh_mode == 0
             if dsdt(end) > dsdt_baseline
+                % bit syncing
+                bitSyncWaitT = toc; % derivative always detects rise
+                needsBitSync = true;
+                % peak detection
                 dthresh_mode = 1;
                 dthresh_start = size(dsdt, 2);
             end
@@ -127,23 +134,34 @@ function main()
             else
                 dthresh_bits = [dthresh_bits, 0];
             end
-            dthresh_mode = 0;
-            fprintf("dthresh decision: got %i -- count %i\n", dthresh_bits(end), bits_rx);
+            dthresh_holdT = toc;
+            dthresh_mode = 3;
+            fprintf("dthresh decision: got %i", dthresh_bits(end));
+        elseif dthresh_mode == 3
+            % hold time -- ignore any further data
+            if toc - dthresh_holdT > dthresh_hold
+                dthresh_mode = 0;
+            end
         end
 
 
         drawnow
-        % fixed sampling period
 
         % make a decision on received bits once both algorithms complete
-        dFoundBit = size(dthresh_bits, 2) == bits_rx + 1;
-        vFoundBit = size(vthresh_bits, 2) == bits_rx + 1;
-        if dFoundBit && vFoundBit
-            disp(dthresh_bits)
-            disp(vthresh_bits)
-            bits_rx = bits_rx + 1;
+        % estimate around 6 seconds per pulse
+        % short-circuit required!
+        if needsBitSync && toc - bitSyncWaitT > bitSyncWait
+            dNumBits = size(dthresh_bits, 2);
+            vNumBits = size(vthresh_bits, 2);
+            if vNumBits < dNumBits
+                % value was not enough to trigger low threshold, say assume
+                % 0 was sent
+                vthresh_bits = [vthresh_bits, 0];
+            end
+            needsBitSync = false;
         end
-        
+
+        % fixed sampling period
         waitfor(r);
     end
 end
