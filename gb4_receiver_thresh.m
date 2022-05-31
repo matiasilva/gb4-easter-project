@@ -54,9 +54,10 @@ function main()
     desc = ["listening for new data", "tracking a peak", "waiting for recovery, ignoring data"];
     cols = ['g', 'b', 'r'];
 
+    
     % only stop after n + 1 bits received
     tic
-    while bits_rx <= (n + 1)
+    while size(dthresh_bits, 2) <= (n + 1)
         % grab new data
         now = readVoltage(a, 'A0');
         s = [s, now];
@@ -105,7 +106,7 @@ function main()
             if s_avg(end) < low_thresh
                 %< low_thresh && (toc - holdTrackT) > holdTime
                 vthresh_mode = 0;
-                fprintf("vthresh decision: got %i", vthresh_bits(end));
+                printArray(vthresh_bits, "value thresholding");
             end
         end
 
@@ -136,14 +137,13 @@ function main()
             end
             dthresh_holdT = toc;
             dthresh_mode = 3;
-            fprintf("dthresh decision: got %i", dthresh_bits(end));
+            printArray(dthresh_bits, "derivative thresholding");
         elseif dthresh_mode == 3
             % hold time -- ignore any further data
             if toc - dthresh_holdT > dthresh_hold
                 dthresh_mode = 0;
             end
         end
-
 
         drawnow
 
@@ -164,4 +164,12 @@ function main()
         % fixed sampling period
         waitfor(r);
     end
+end
+
+function printArray(name, arr)
+    fprintf("%s [", name)
+    for i = 1:size(arr, 2)
+        fprintf("%i ", arr(i))
+    end
+    fprintf("]\n")
 end
