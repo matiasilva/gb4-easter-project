@@ -13,7 +13,7 @@ function main()
     % receiver params
     high_thresh = 2.75;
     low_thresh = 2;
-    lag = 1;
+    lag = 0.6;
     samplingRate = 0.05; % max is 0.05
     dsdt_thresh = 2.1;
     dsdt_baseline = 0.1;
@@ -154,11 +154,19 @@ function main()
             dNumBits = size(dthresh_bits, 2);
             vNumBits = size(vthresh_bits, 2);
             if vNumBits < dNumBits
-                % value was not enough to trigger low threshold, say assume
+                % value was not enough to trigger low threshold, assume
                 % 0 was sent
                 vthresh_bits = [vthresh_bits, 0];
             end
             needsBitSync = false;
+
+            % spit out the bit according to this rule
+            if vthresh_bits(end) && dthresh_bits(end)
+               bit = 1;
+            else
+               bit = 0;
+            end
+            sprintf('final bit decision: %i', bit);
         end
 
         % fixed sampling period
@@ -166,7 +174,7 @@ function main()
     end
 end
 
-function printArray(name, arr)
+function printArray(arr, name)
     fprintf("%s [", name)
     for i = 1:size(arr, 2)
         fprintf("%i ", arr(i))
