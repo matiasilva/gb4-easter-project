@@ -94,31 +94,30 @@ function main()
                     %fprintf('continual rise not detected, likely low\n')
                     vthresh_bits = [vthresh_bits, 0];
                 end
-                disp(bits)
                 vthresh_mode = 2;
                 %holdTrackT = toc;
                 %fprintf('holding: ignoring all rises')
             end
         elseif vthresh_mode == 2
-            if s_avg(end) 
+            if s_avg(end) < low_thresh
                 %< low_thresh && (toc - holdTrackT) > holdTime
                 vthresh_mode = 0;
             end
+            fprintf("vthresh decision: got %i -- count %i", vthresh_bits(end), bits_rx);
         end
 
         % derivative thresholding
+        yline(dsdt_thresh, 'Color', 'r');
         if dthresh_mode == 0
-            if dsdt > dsdt_baseline
+            if dsdt(end) > dsdt_baseline
                 dthresh_mode = 1;
-                len = size(dsdt);
-                dthresh_start = len(2) - 1;
+                dthresh_start = size(dsdt, 2);
             end
         elseif dthresh_mode == 1
             % derivative peaks fall very quickly to noise
-            if dsdt < dsdt_baseline
+            if dsdt(end) < dsdt_baseline
                 dthresh_mode = 2;
-                len = size(dsdt);
-                dthresh_end = len(2) - 1;
+                dthresh_end = size(dsdt, 2);
             end
         elseif dthresh_mode == 2
             subset = dsdt(dthresh_start:dthresh_end);
@@ -128,6 +127,8 @@ function main()
             else
                 dthresh_bits = [dthresh_bits, 0];
             end
+            dthresh_mode = 0;
+            fprintf("dthresh decision: got %i -- count %i", dthresh_bits(end), bits_rx);
         end
 
 
