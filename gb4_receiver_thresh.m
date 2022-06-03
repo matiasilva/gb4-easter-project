@@ -8,7 +8,13 @@
 main()
 
 function main()
-    %a = arduino();
+    a = arduino();
+    
+    % receiver-drone interface params
+    epw = 0.1;
+    pT = timer("StartDelay", epw); %set the switching pulse width
+    pT.TimerFcn = @(~,~)fprintf('');
+    inAir = false;
 
     % receiver params
     high_thresh = 2.75;
@@ -166,7 +172,17 @@ function main()
             else
                bit = 0;
             end
-            sprintf('final bit decision: %i', bit);
+            fprintf('final bit decision: %i', bit);
+            
+            %use the detected bit to control drone
+            ReceiverToRelay(bit, inAir, a, pT);
+            inAir = not(inAir);
+            
+            if inAir == true
+                fprintf('1\n');
+            elseif inAir == false
+                fprintf('0\n');
+            end
         end
 
         % fixed sampling period
@@ -180,4 +196,25 @@ function printArray(arr, name)
         fprintf("%i ", arr(i))
     end
     fprintf("]\n")
+end
+
+function ReceiverToRelay(bit, inAir, a, pT) 
+%bit is the signal detected (1 or 0),
+%state is the state of the drone, ie. 'air' or 'gnd'
+    if (inAir == false) && (bit == 1)
+        controlDrone(a, pT);
+    elseif (inAir == true) && (bit == 0)
+        controlDrone(a, pT);
+    else
+        fprintf('Invalid command or invalid input data type for receiver-drone\n')
+    end
+end
+
+function controlDrone(a, pulsewidth)
+    %every time this function is called, the land/takeoff button is
+    %pressed.
+    writeDigitalPin(a, 'D10', 1);
+    start(pulsewidth);
+    wait(pulsewidth);
+    writeDigitalPin(a, 'D10', 0);
 end
